@@ -134,18 +134,38 @@ function renderFlashcard() {
     $('#flashcard-container').innerHTML = "<div style='text-align:center;padding:2em;'>No vocabulary found!<br>Go to <b>Input</b> to add words.</div>";
     return;
   }
-  const idx = flashcardOrder[flashcardIdx];
-  const v = vocab[idx];
+  
+  // Filter out reviewed words
+  const reviewed = load(STORAGE_KEYS.reviewed, []);
+  const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
+  
+  if (!availableVocab.length) {
+    $('#flashcard-container').innerHTML = `<div style='text-align:center;padding:2em;font-size:1.3em;color:var(--accent2);'>
+      🎉 Congratulations! You've mastered all words!
+    </div>`;
+    return;
+  }
+  
+  // Make sure flashcardIdx is within bounds
+  if (flashcardIdx >= availableVocab.length) {
+    flashcardIdx = 0;
+  }
+  
+  // Get the current word index in the original vocab array
+  const availableIndices = vocab.map((entry, index) => 
+    !reviewed.includes(entry.word) ? index : null
+  ).filter(index => index !== null);
+  
+  const currentVocabIndex = availableIndices[flashcardIdx];
+  const v = vocab[currentVocabIndex];
+  
   // Word icon if available
   const icon = WORD_ICONS[v.word.toLowerCase()] || "";
   // IPA
   const ipa = getIPA(v.word);
-  // Progress
-  let reviewed = load(STORAGE_KEYS.reviewed, []);
-  const isReviewed = reviewed.includes(v.word);
 
   $('#flashcard-container').innerHTML = `
-    <div class="flashcard${isReviewed ? " reviewed" : ""}" tabindex="0" id="flashcard">
+    <div class="flashcard" tabindex="0" id="flashcard">
       <div class="flashcard-inner">
         <div class="flashcard-front">
           <div class="word">${icon} ${v.word}</div>
@@ -175,31 +195,77 @@ function renderFlashcard() {
     if (!reviewed.includes(v.word)) reviewed.push(v.word);
     save(STORAGE_KEYS.reviewed, reviewed);
     showBadge("flashcard-badges", "⭐ Word reviewed!");
+    
+    // Check if there are still words available
+    const vocab = loadVocab();
+    const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
+    
+    if (availableVocab.length === 0) {
+      // No more words left
+      $('#flashcard-container').innerHTML = `<div style='text-align:center;padding:2em;font-size:1.3em;color:var(--accent2);'>
+        🎉 Congratulations! You've mastered all words!
+      </div>`;
+      return;
+    }
+    
+    // Move to next flashcard
     nextFlashcard();
     renderProgress();
   };
 }
 
 function nextFlashcard() {
-  if (flashcardOrder.length === 0) return;
-  flashcardIdx = (flashcardIdx + 1) % flashcardOrder.length;
+  const vocab = loadVocab();
+  const reviewed = load(STORAGE_KEYS.reviewed, []);
+  const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
+  
+  if (!availableVocab.length) {
+    $('#flashcard-container').innerHTML = `<div style='text-align:center;padding:2em;font-size:1.3em;color:var(--accent2);'>
+      🎉 Congratulations! You've mastered all words!
+    </div>`;
+    return;
+  }
+  
+  // Update flashcard index
+  flashcardIdx = (flashcardIdx + 1) % availableVocab.length;
   renderFlashcard();
 }
+
 function prevFlashcard() {
-  if (flashcardOrder.length === 0) return;
-  flashcardIdx = (flashcardIdx - 1 + flashcardOrder.length) % flashcardOrder.length;
+  const vocab = loadVocab();
+  const reviewed = load(STORAGE_KEYS.reviewed, []);
+  const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
+  
+  if (!availableVocab.length) {
+    $('#flashcard-container').innerHTML = `<div style='text-align:center;padding:2em;font-size:1.3em;color:var(--accent2);'>
+      🎉 Congratulations! You've mastered all words!
+    </div>`;
+    return;
+  }
+  
+  // Update flashcard index
+  flashcardIdx = (flashcardIdx - 1 + availableVocab.length) % availableVocab.length;
   renderFlashcard();
 }
+
 function shuffleFlashcards() {
   const vocab = loadVocab();
-  flashcardOrder = shuffle(Array.from(vocab.keys ? vocab.keys() : vocab.map((_,i)=>i)));
+  const reviewed = load(STORAGE_KEYS.reviewed, []);
+  const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
+  
+  if (!availableVocab.length) {
+    $('#flashcard-container').innerHTML = `<div style='text-align:center;padding:2em;font-size:1.3em;color:var(--accent2);'>
+      🎉 Congratulations! You've mastered all words!
+    </div>`;
+    return;
+  }
+  
+  // For shuffling, we just need to reset the index since the order is visual only
   flashcardIdx = 0;
   renderFlashcard();
 }
 
 function initFlashcards() {
-  const vocab = loadVocab();
-  flashcardOrder = Array.from(vocab.keys ? vocab.keys() : vocab.map((_,i)=>i));
   flashcardIdx = 0;
   renderFlashcard();
 }
@@ -218,7 +284,7 @@ $('#save-vocab').onclick = function() {
   }
   saveVocab(vocab);
   $('#input-feedback').textContent = `Saved ${vocab.length} words!`;
-  initFlashcards();
+  initFlashcards(); // This will show the new words
   setTimeout(() => $('#input-feedback').textContent = "", 2000);
 };
 
@@ -300,19 +366,20 @@ function startQuiz() {
     return;
   }
   
-  // Filter out already reviewed words
+  // Filter out already reviewed words (words marked as "Got it")
   const reviewed = load(STORAGE_KEYS.reviewed, []);
   const availableVocab = vocab.filter(entry => !reviewed.includes(entry.word));
   
   if (!availableVocab.length) {
     $('#quiz-container').innerHTML = `<div style="font-size:1.3em;color:var(--accent2);margin:1em;text-align:center;">
-        🎉 Bạn đã ôn tập tất cả các từ! <br>Giỏi lắm!
+        🎉 Great job! You've reviewed all words!
       </div>`;
     $('#quiz-feedback').textContent = "";
     return;
   }
   
   quizState = {
+    vocabList: availableVocab, // Only store available vocabulary
     order: shuffle(Array.from(availableVocab.keys ? availableVocab.keys() : availableVocab.map((_,i)=>i))),
     idx: 0,
     correct: 0,
@@ -324,7 +391,7 @@ function startQuiz() {
 }
 
 function renderQuizQuestion() {
-  const vocab = loadVocab();
+  // Check if we've completed the quiz
   if (quizState.idx >= quizState.order.length) {
     // Quiz finished
     $('#quiz-container').innerHTML = `<div style="font-size:1.3em;color:var(--accent2);margin:1em;">
@@ -335,8 +402,9 @@ function renderQuizQuestion() {
     confetti();
     return;
   }
+  
   const idx = quizState.order[quizState.idx];
-  const v = vocab[idx];
+  const v = quizState.vocabList[idx]; // Use the filtered vocab list
   const sentence = pickQuizSentence(v);
 
   $('#quiz-container').innerHTML = `
@@ -359,6 +427,13 @@ function renderQuizQuestion() {
       quizState.correct += 1;
       showBadge("quiz-badges", "🎉 Correct!");
       confetti();
+      
+      // Automatically mark word as reviewed when user gets it correct in quiz
+      let reviewed = load(STORAGE_KEYS.reviewed, []);
+      if (!reviewed.includes(v.word)) {
+        reviewed.push(v.word);
+        save(STORAGE_KEYS.reviewed, reviewed);
+      }
     } else {
       $('#quiz-feedback').textContent = `❌ Oops! It was "${v.word}".`;
       showBadge("quiz-badges", "👀 Try next!");
@@ -431,7 +506,9 @@ $('#reset-progress').onclick = function() {
   renderProgress();
   showBadge("flashcard-badges", "🔄 Progress reset!", true);
 };
-$('#restart-quiz').onclick = startQuiz;
+$('#restart-quiz').onclick = function() {
+  startQuiz();
+};
 $('#reset-all').onclick = function() {
   if (!confirm("Clear ALL vocabulary and progress?")) return;
   Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
