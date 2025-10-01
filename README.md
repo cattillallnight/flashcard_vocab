@@ -1,6 +1,5 @@
 # Vocabulary Fun! — Kids' Vocabulary Learning Web App
 
-![logo placeholder](screenshot-placeholder.png)
 
 A **child-friendly, colorful web app** for learning vocabulary with flashcards and quizzes, featuring **IPA transcription** and **audio pronunciation**. Designed for children and easy local use.
 
@@ -113,5 +112,5 @@ MIT License.
 ---
 
 ## Screenshots
+<img width="1524" height="1386" alt="image" src="https://github.com/user-attachments/assets/5c2af857-6e28-447c-9876-2d58c0289d76" />
 
-*(Add screenshots here after running locally!)*
