@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Kids' Vocabulary Fun App</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://fonts.gstatic.com/s/i/materialiconsoutlined/school/v11/24px.svg">
+</head>
+<body>
+  <header>
+    <h1>
+      <span class="rainbow">Vocabulary Fun!</span>
+      <button id="theme-toggle" title="Toggle dark/light mode" aria-label="Toggle theme">
+        <span id="theme-icon">🌞</span>
+      </button>
+    </h1>
+    <nav>
+      <button class="nav-btn" data-view="input">📝 Input</button>
+      <button class="nav-btn" data-view="flashcards">🃏 Flashcards</button>
+      <button class="nav-btn" data-view="quiz">❓ Quiz</button>
+      <button class="nav-btn" data-view="progress">⭐ Progress</button>
+    </nav>
+  </header>
+  <main>
+    <!-- Vocabulary Input View -->
+    <section id="input-view" class="view">
+      <h2>Paste Vocabulary</h2>
+      <p>Enter words in the format:<br>
+        <span class="input-format">word:word type:meaning[:example sentence]</span><br>
+        <small>(e.g., <span>cat:noun:a small animal:The <b>cat</b> is sleeping.</span>)</small>
+      </p>
+      <textarea id="vocab-input" rows="8" placeholder="dog:noun:a domestic animal&#10;run:verb:to move fast"></textarea>
+      <div class="center-btn">
+        <button id="save-vocab" class="main-btn">Save Vocabulary</button>
+      </div>
+      <div id="input-feedback"></div>
+      <p class="tip">You can add optional example sentences after the meaning, separated by a colon.</p>
+    </section>
+    <!-- Flashcards View -->
+    <section id="flashcards-view" class="view hidden">
+      <h2>Flashcards</h2>
+      <div id="flashcard-container">
+        <!-- Flashcard will be injected here -->
+      </div>
+      <div class="flashcard-controls">
+        <button id="prev-flashcard" class="circle-btn" aria-label="Previous">&#8592;</button>
+        <button id="shuffle-flashcards" class="circle-btn" title="Shuffle">&#128256;</button>
+        <button id="next-flashcard" class="circle-btn" aria-label="Next">&#8594;</button>
+      </div>
+      <div class="badge-row" id="flashcard-badges"></div>
+      <div class="center-btn">
+        <button id="reset-progress" class="secondary-btn">Reset Progress</button>
+      </div>
+    </section>
+    <!-- Quiz View -->
+    <section id="quiz-view" class="view hidden">
+      <h2>Fill-in-the-Blank Quiz</h2>
+      <div id="quiz-container">
+        <!-- Quiz question will be injected here -->
+      </div>
+      <div id="quiz-feedback"></div>
+      <div id="quiz-progress-bar"><span id="quiz-progress"></span></div>
+      <div class="badge-row" id="quiz-badges"></div>
+      <div class="center-btn">
+        <button id="restart-quiz" class="secondary-btn">Restart Quiz</button>
+      </div>
+    </section>
+    <!-- Progress View -->
+    <section id="progress-view" class="view hidden">
+      <h2>Your Progress</h2>
+      <div id="progress-summary">
+        <!-- Progress info injected here -->
+      </div>
+      <div id="progress-stars"></div>
+      <div class="badge-row" id="progress-badges"></div>
+      <div class="center-btn">
+        <button id="reset-all" class="secondary-btn">Reset All Data</button>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>
+      Made with <span class="heart">♥</span> for kids by <a href="https://github.com/cattillallnight" target="_blank">cattillallnight</a>.
+    </p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
